@@ -43,15 +43,20 @@ def color_step(start, end, r, step):
     return c
 
 
-def get_aqi() -> int:
+def get_ppm() -> int:
     p = PurpleAir(os.environ["PURPLEAIR_API_KEY"])
     s = p.get_sensor_data(os.environ["PURPLEAIR_SENSOR_ID"])
+    print(s)
     ppm = s["sensor"]["pm2.5"]
     return int(ppm)
 
 
-if __name__ == "__main__":
-    aqi = get_aqi()
+def ppm_to_aqi(ppm: int) -> int:
+    # TODO
+    return ppm
+
+
+def aqi_to_color(aqi: int):
     if 0 <= aqi < 50:
         start = lime
         end = green
@@ -85,10 +90,16 @@ if __name__ == "__main__":
     else:
         raise NotImplementedError(f"Didn't understand aqi {aqi}")
     c = color_step(start, end, r, step)
+    return c
+
+
+if __name__ == "__main__":
+    ppm = get_ppm()
+    aqi = ppm_to_aqi(ppm)
+    c = aqi_to_color(aqi)
     h = c.hex_l.replace("#", "")
     print(f"AQI is {aqi} ({print_color(c)})")
     print(
         f'"AQI is {aqi} <br>![](https://raster.shields.io/badge/-{h}?style=flat-square)" | push-notification "Air Quality from Sunjar"'
     )
-
     set_wled_color(c)
