@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from purpleair import PurpleAir
 import sys
 from colour import Color
 import requests
@@ -42,8 +43,15 @@ def color_step(start, end, r, step):
     return c
 
 
+def get_aqi() -> int:
+    p = PurpleAir(os.environ["PURPLEAIR_API_KEY"])
+    s = p.get_sensor_data(os.environ["PURPLEAIR_SENSOR_ID"])
+    ppm = s["sensor"]["pm2.5"]
+    return int(ppm)
+
+
 if __name__ == "__main__":
-    aqi = int(sys.argv[1])
+    aqi = get_aqi()
     if 0 <= aqi < 50:
         start = lime
         end = green
@@ -84,4 +92,3 @@ if __name__ == "__main__":
     )
 
     set_wled_color(c)
-
