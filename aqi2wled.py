@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from purpleair import PurpleAir
-import sys
-from colour import Color
-import requests
 import os
+import sys
 
+import aqi as paqi
+import requests
+from colour import Color
+from purpleair import PurpleAir
 
 lime = Color("lime")
 green = Color("green")
@@ -43,23 +44,28 @@ def color_step(start, end, r, step):
     return c
 
 
-def get_ppm() -> int:
+def get_data() -> dict:
     p = PurpleAir(os.environ["PURPLEAIR_API_KEY"])
     s = p.get_sensor_data(os.environ["PURPLEAIR_SENSOR_ID"])
     print(s)
-    ppm = s["sensor"]["pm2.5"]
-    return int(ppm)
+    data = s["sensor"]
+    return data
 
 
-def ppm_to_aqi(ppm: int) -> int:
-    # TODO
-    return ppm
+def data_to_aqi(data: dict) -> int:
+    myaqi = paqi.to_aqi(
+        [
+            (paqi.POLLUTANT_PM25, data["pm2.5"]),
+            (paqi.POLLUTANT_PM10, data["pm10.0"]),
+        ]
+    )
+    return int(myaqi)
 
 
 def aqi_to_color(aqi: int):
     if 0 <= aqi < 50:
         start = lime
-        end = green
+        end = yellow
         r = 50
         step = aqi - 0
     elif 50 <= aqi < 100:
@@ -94,8 +100,8 @@ def aqi_to_color(aqi: int):
 
 
 if __name__ == "__main__":
-    ppm = get_ppm()
-    aqi = ppm_to_aqi(ppm)
+    data = get_data()
+    aqi = data_to_aqi(data)
     c = aqi_to_color(aqi)
     h = c.hex_l.replace("#", "")
     print(f"AQI is {aqi} ({print_color(c)})")
